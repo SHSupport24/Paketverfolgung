@@ -5,15 +5,8 @@
   <title>Sendung verfolgen</title>
   <script src="https://p.trellocdn.com/power-up.min.js"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 16px;
-    }
-    label, select, input {
-      display: block;
-      margin-bottom: 10px;
-      width: 100%;
-    }
+    body { font-family: sans-serif; padding: 16px; }
+    label, select, input { display: block; margin-bottom: 10px; width: 100%; }
     button {
       padding: 8px 12px;
       background-color: #026aa7;
@@ -37,13 +30,13 @@
   </select>
 
   <label for="nummer">Trackingnummer:</label>
-  <input type="text" id="nummer" placeholder="z. B. 0034043412..." />
+  <input type="text" id="nummer" placeholder="0034043412..." />
 
   <label for="status">Status:</label>
   <select id="status">
     <option>Ausstehend</option>
     <option>Zugestellt</option>
-    <option>Lieferung am TT.MM.</option>
+    <option>Lieferung geplant</option>
   </select>
 
   <button id="speichern">Speichern</button>
@@ -56,12 +49,10 @@
       const nummer = document.getElementById('nummer').value;
       const status = document.getElementById('status').value;
 
-      const anzeige = status === "Lieferung am TT.MM." ? "Lieferung geplant" : status;
-
       t.set('card', 'shared', {
         trackingDienst: dienst,
         trackingNummer: nummer,
-        trackingStatus: anzeige
+        trackingStatus: status
       }).then(function () {
         t.closePopup();
       });

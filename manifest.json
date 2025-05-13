@@ -1,10 +1,11 @@
 {
-    "name": "Paketverfolgung Deutschland",
-    "description": "Verfolge Pakete von DHL, DHL Express, UPS, GLS und DPD direkt in Trello.",
-    "permissions": {
-      "board": "read",
-      "card": "read,write"
-    },
+    "name": "Paketverfolgung",
+    "description": "Verfolge Pakete von DHL, UPS, DPD, GLS direkt in Trello",
+    "author": "Dein Name",
+    "version": "1.0",
+    "iframeConnectorUrl": "https://paketverfolgung-wo88.vercel.app/",
+    "icon": "",
+    "permissions": ["card-buttons", "card-badges"],
     "capabilities": {
       "card-buttons": [
         {
@@ -14,11 +15,9 @@
       ],
       "card-badges": [
         {
-          "dynamic": "getTrackingBadge"
+          "dynamic": "getStatusBadge"
         }
       ]
-    },
-    "iframeConnectorUrl": "https://https://paketverfolgung-wo88.vercel.app/",
-    "author": "Dein Name"
+    }
   }
   
