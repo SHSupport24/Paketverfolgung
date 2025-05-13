@@ -1,5 +1,3 @@
-// /api/tracking.js
-
 export default async function handler(req, res) {
   const { carrier_code, tracking_number } = req.query;
 
@@ -9,7 +7,7 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.TRACKINGMORE_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'API-Key nicht konfiguriert' });
+    return res.status(500).json({ error: 'API-Key nicht gesetzt' });
   }
 
   try {
@@ -21,17 +19,18 @@ export default async function handler(req, res) {
       },
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      return res.status(500).json({ error: `Tracking API Fehler: ${text}` });
+    const text = await response.text();
+
+    // Wenn keine gültige JSON-Antwort → Fehler zurückgeben
+    try {
+      const result = JSON.parse(text);
+      const status = result.data?.items?.[0]?.status || 'unbekannt';
+      return res.status(200).json({ status });
+    } catch (jsonErr) {
+      return res.status(500).json({ error: 'Ungültige Antwort von Tracking-API', raw: text });
     }
 
-    const result = await response.json();
-    const status = result.data?.items?.[0]?.status || 'unbekannt';
-    return res.status(200).json({ status });
-
   } catch (error) {
-    console.error('Tracking-Fehler:', error);
-    return res.status(500).json({ error: 'Serverfehler bei der Abfrage' });
+    return res.status(500).json({ error: 'Serverfehler bei API-Anfrage', details: error.message });
   }
 }
