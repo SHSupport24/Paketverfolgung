@@ -1,36 +1,29 @@
-const carrierMap = {
-  'dhl': 'dhl-germany',
-  'dhl-express': 'dhl',
-  'ups': 'ups',
-  'dpd': 'dpd',
-  'gls': 'gls',
-};
-
 export default async function handler(req, res) {
   const { carrier_code, tracking_number } = req.query;
 
-  if (!carrier_code || !tracking_number) {
-    return res.status(400).json({ error: 'Fehlende Parameter' });
-  }
-
-  const mappedCarrier = carrierMap[carrier_code.toLowerCase()];
-  if (!mappedCarrier) {
-    return res.status(400).json({ error: 'Ungültiger Carrier-Code' });
-  }
-
-  const apiKey = process.env.TRACKINGMORE_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: 'API-Key fehlt' });
-  }
-
+  const TRACKINGMORE_API_KEY = 'xlogsga5-8jha-ch20-l4re-nqd4k9fphxxh';
   const headers = {
-    'Tracking-Api-Key': apiKey,
     'Content-Type': 'application/json',
+    'Tracking-Api-Key': TRACKINGMORE_API_KEY,
   };
 
+  const carrierMap = {
+    'dhl': 'dhl',
+    'dhl-express': 'dhl',
+    'ups': 'ups',
+    'dpd': 'dpd',
+    'gls': 'gls',
+  };
+
+  const mappedCarrier = carrierMap[carrier_code];
+
+  if (!mappedCarrier || !tracking_number) {
+    return res.status(400).json({ error: 'Ungültige Parameter' });
+  }
+
   try {
-    // Schritt 1: Tracking anlegen (ignoriere Fehler, falls es schon existiert)
-    await fetch('https://api.trackingmore.com/v4/trackings/create', {
+    // 1. Tracking-Objekt anlegen
+    await fetch('https://api.trackingmore.com/v4/trackings/post', {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -39,23 +32,32 @@ export default async function handler(req, res) {
       }),
     });
 
-    // Schritt 2: Status abrufen
-    const url = `https://api.trackingmore.com/v4/trackings/${mappedCarrier}/${tracking_number}`;
-    const response = await fetch(url, {
+    // 2. Status abfragen
+    const statusRes = await fetch(`https://api.trackingmore.com/v4/trackings/${mappedCarrier}/${tracking_number}`, {
       method: 'GET',
       headers,
     });
 
-    const data = await response.json();
+    const statusData = await statusRes.json();
 
-    if (!response.ok || data.meta?.code !== 200) {
-      return res.status(500).json({ error: 'Tracking API Fehler', raw: data });
-    }
+    // 3. Status interpretieren
+    const trackingStatus = statusData?.data?.tracking_info?.status || 'unknown';
 
-    const status = data.data?.status || 'unbekannt';
-    return res.status(200).json({ status });
+    const statusMapping = {
+      'delivered': 'Zugestellt',
+      'transit': 'Unterwegs',
+      'exception': 'Problem',
+      'pending': 'Ausstehend',
+      'notfound': 'Ausstehend',
+      'expired': 'Abgelaufen',
+      'unknown': 'Unbekannt',
+    };
 
-  } catch (error) {
-    return res.status(500).json({ error: 'Serverfehler', details: error.message });
+    const germanStatus = statusMapping[trackingStatus.toLowerCase()] || 'Unbekannt';
+
+    return res.status(200).json({ status: germanStatus });
+
+  } catch (err) {
+    return res.status(500).json({ error: 'Tracking API Fehler', raw: err.message });
   }
 }
