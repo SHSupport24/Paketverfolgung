@@ -1,62 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Sendung verfolgen</title>
   <script src="https://p.trellocdn.com/power-up.min.js"></script>
-  <style>
-    body { font-family: sans-serif; padding: 16px; }
-    label, select, input { display: block; margin-bottom: 10px; width: 100%; }
-    button {
-      padding: 8px 12px;
-      background-color: #026aa7;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-  </style>
 </head>
 <body>
-  <h3>Sendung verfolgen</h3>
-
-  <label for="dienst">Versanddienst:</label>
-  <select id="dienst">
-    <option>DHL</option>
-    <option>DHL Express</option>
-    <option>UPS</option>
-    <option>DPD</option>
-    <option>GLS</option>
-  </select>
-
-  <label for="nummer">Trackingnummer:</label>
-  <input type="text" id="nummer" placeholder="0034043412..." />
-
-  <label for="status">Status:</label>
-  <select id="status">
-    <option>Ausstehend</option>
-    <option>Zugestellt</option>
-    <option>Lieferung geplant</option>
-  </select>
-
-  <button id="speichern">Speichern</button>
+  <h3>Tracking eingeben</h3>
+  <label>Trackingnummer:
+    <input type="text" id="trackingNumber" />
+  </label><br />
+  <label>Dienst (carrier):
+    <select id="carrier">
+      <option value="dhl">DHL</option>
+      <option value="dhl-de">DHL Express</option>
+      <option value="dpd">DPD</option>
+      <option value="gls">GLS</option>
+      <option value="ups">UPS</option>
+    </select>
+  </label><br /><br />
+  <button onclick="track()">Verfolgen</button>
 
   <script>
-    var t = TrelloPowerUp.iframe();
+    const t = TrelloPowerUp.iframe();
 
-    document.getElementById('speichern').addEventListener('click', function () {
-      const dienst = document.getElementById('dienst').value;
-      const nummer = document.getElementById('nummer').value;
-      const status = document.getElementById('status').value;
+    async function track() {
+      const carrier = document.getElementById('carrier').value;
+      const trackingNumber = document.getElementById('trackingNumber').value;
 
-      t.set('card', 'shared', {
-        trackingDienst: dienst,
-        trackingNummer: nummer,
-        trackingStatus: status
-      }).then(function () {
-        t.closePopup();
-      });
-    });
+      const res = await fetch(`https://paketverfolgung-wo88.vercel.app/api/tracking?carrier_code=${carrier}&tracking_number=${trackingNumber}`);
+      const data = await res.json();
+
+      let status = 'Ausstehend';
+      if (data.status === 'delivered') status = 'Zugestellt';
+      else if (data.status === 'transit') status = 'Unterwegs';
+
+      await t.set('card', 'shared', 'trackingStatus', status);
+      t.closePopup();
+    }
   </script>
 </body>
 </html>

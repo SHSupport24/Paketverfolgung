@@ -1,12 +1,14 @@
 {
     "name": "Paketverfolgung",
-    "description": "Verfolge Pakete von DHL, UPS, DPD, GLS direkt in Trello",
-    "author": "Dein Name",
-    "version": "1.0",
+    "description": "Verfolge DHL, UPS, GLS und DPD direkt in Trello.",
+    "permissions": {
+      "api": "read",
+      "card-buttons": true,
+      "card-badges": true
+    },
+    "author": "Du",
     "iframeConnectorUrl": "https://paketverfolgung-wo88.vercel.app/",
-    "icon": "",
-    "permissions": ["card-buttons", "card-badges"],
-    "capabilities": {
+    "connectors": {
       "card-buttons": [
         {
           "text": "Sendung verfolgen",

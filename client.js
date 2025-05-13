@@ -1,35 +1,26 @@
 /* global TrelloPowerUp */
-var Promise = TrelloPowerUp.Promise;
+const t = TrelloPowerUp.iframe();
 
-TrelloPowerUp.initialize({
+window.openTrackingPopup = function (t) {
+  return t.popup({
+    title: 'Sendungsverfolgung',
+    url: './tracking.html',
+    height: 300
+  });
+};
 
-  'card-buttons': function(t, options) {
-    return [{
-      text: 'Sendung verfolgen',
-      callback: function(t) {
-        return t.popup({
-          title: 'Sendung verfolgen',
-          url: './tracking.html',
-          height: 250
-        });
-      }
-    }];
-  },
+window.getStatusBadge = function (t) {
+  return t.get('card', 'shared', 'trackingStatus')
+    .then(status => {
+      if (!status) return [];
 
-  'card-badges': function(t, options) {
-    return t.get('card', 'shared', 'trackingStatus')
-      .then(function(status) {
-        if (!status) return [];
+      let color = 'yellow';
+      if (status === 'Zugestellt') color = 'green';
+      if (status === 'Ausstehend') color = 'red';
 
-        let color = 'orange';
-        if (status === 'Zugestellt') color = 'green';
-        if (status === 'Ausstehend') color = 'red';
-
-        return [{
-          text: status,
-          color: color
-        }];
-      });
-  }
-
-});
+      return [{
+        text: status,
+        color: color
+      }];
+    });
+};
