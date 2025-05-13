@@ -36,11 +36,13 @@ export default async function handler(req, res) {
 
     const postData = await postResponse.json();
 
-    if (postResponse.status !== 200 || !postData || postData.error) {
+    // Prüfe, ob die POST-Anfrage erfolgreich war
+    const code = postData.meta?.code;
+    if (!postData || (code && code >= 400 && code !== 409)) {
       return res.status(500).json({ error: 'Fehler beim Senden der Tracking-Nummer', raw: postData });
     }
 
-    // 2. Kurz warten
+    // 2. Kurz warten, damit TrackingMore Daten abrufen kann
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     // 3. Status abfragen
@@ -48,7 +50,7 @@ export default async function handler(req, res) {
       method: 'GET',
       headers,
     });
-
+    
     const statusData = await statusRes.json();
 
     // Wenn du debuggen willst: gib einfach alles zurück
