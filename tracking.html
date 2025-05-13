@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Sendung verfolgen</title>
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 16px;
+    }
+    label, select, input {
+      display: block;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    button {
+      padding: 8px 12px;
+      background-color: #026aa7;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h3>Sendung verfolgen</h3>
+
+  <label for="dienst">Versanddienst:</label>
+  <select id="dienst">
+    <option>DHL</option>
+    <option>DHL Express</option>
+    <option>UPS</option>
+    <option>DPD</option>
+    <option>GLS</option>
+  </select>
+
+  <label for="nummer">Trackingnummer:</label>
+  <input type="text" id="nummer" placeholder="z. B. 0034043412..." />
+
+  <label for="status">Status:</label>
+  <select id="status">
+    <option>Ausstehend</option>
+    <option>Zugestellt</option>
+    <option>Lieferung am TT.MM.</option>
+  </select>
+
+  <button id="speichern">Speichern</button>
+
+  <script>
+    var t = TrelloPowerUp.iframe();
+
+    document.getElementById('speichern').addEventListener('click', function () {
+      const dienst = document.getElementById('dienst').value;
+      const nummer = document.getElementById('nummer').value;
+      const status = document.getElementById('status').value;
+
+      const anzeige = status === "Lieferung am TT.MM." ? "Lieferung geplant" : status;
+
+      t.set('card', 'shared', {
+        trackingDienst: dienst,
+        trackingNummer: nummer,
+        trackingStatus: anzeige
+      }).then(function () {
+        t.closePopup();
+      });
+    });
+  </script>
+</body>
+</html>
