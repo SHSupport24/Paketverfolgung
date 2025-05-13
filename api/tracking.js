@@ -73,6 +73,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ status: germanStatus });
 
   } catch (err) {
+    console.error('Fehler in /api/tracking:', err);
     return res.status(500).json({ error: 'Tracking API Fehler', raw: err.message });
-  }
+  }  
 }
