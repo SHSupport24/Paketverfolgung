@@ -40,7 +40,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Fehler beim Senden der Tracking-Nummer', raw: postData });
     }
 
-    // 2. Warten, damit TrackingMore Daten abrufen kann
+    // 2. Kurz warten
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     // 3. Status abfragen
@@ -51,11 +51,15 @@ export default async function handler(req, res) {
 
     const statusData = await statusRes.json();
 
+    // Wenn du debuggen willst: gib einfach alles zurück
+    // return res.status(200).json({ raw: statusData });
+
+    // 4. Validierung
     if (!statusData || !statusData.data || !statusData.data.tracking_info) {
-      return res.status(500).json({ error: 'Keine Tracking-Daten gefunden' });
+      return res.status(500).json({ error: 'Keine Tracking-Daten gefunden', raw: statusData });
     }
 
-    // 4. Status interpretieren
+    // 5. Status interpretieren
     const trackingStatus = statusData.data.tracking_info.status || 'unknown';
 
     const statusMapping = {
@@ -75,5 +79,5 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('Fehler in /api/tracking:', err);
     return res.status(500).json({ error: 'Tracking API Fehler', raw: err.message });
-  }  
+  }
 }
