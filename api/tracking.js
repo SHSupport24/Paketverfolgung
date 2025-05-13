@@ -22,9 +22,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Tracking-Objekt anlegen mit zusätzlichem Ziel-Land
+    // 1. Tracking-Objekt anlegen
     const postResponse = await fetch('https://api.trackingmore.com/v4/trackings', {
-
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -35,38 +34,16 @@ export default async function handler(req, res) {
       }),
     });
 
-    // Nach dem POST:
-const postResponse = await fetch('https://api.trackingmore.com/v4/trackings', {
-  method: 'POST',
-  headers,
-  body: JSON.stringify({
-    tracking_number,
-    carrier_code: mappedCarrier,
-    destination_code: 'DE',
-    language: 'de',
-  }),
-});
-
-const postData = await postResponse.json();
-
-if (postResponse.status !== 200 || !postData || postData.error) {
-  return res.status(500).json({ error: 'Fehler beim Senden der Tracking-Nummer', raw: postData });
-}
-
-// ✅ → HIER kurze Wartezeit vor der Abfrage:
-await new Promise(resolve => setTimeout(resolve, 3000));
-
-// Jetzt GET
-
-
     const postData = await postResponse.json();
 
-    // Überprüfe, ob die POST-Anfrage erfolgreich war
     if (postResponse.status !== 200 || !postData || postData.error) {
       return res.status(500).json({ error: 'Fehler beim Senden der Tracking-Nummer', raw: postData });
     }
 
-    // 2. Status abfragen
+    // 2. Warten, damit TrackingMore Daten abrufen kann
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // 3. Status abfragen
     const statusRes = await fetch(`https://api.trackingmore.com/v4/trackings/${mappedCarrier}/${tracking_number}`, {
       method: 'GET',
       headers,
@@ -74,12 +51,11 @@ await new Promise(resolve => setTimeout(resolve, 3000));
 
     const statusData = await statusRes.json();
 
-    // Überprüfe die Antwortstruktur
     if (!statusData || !statusData.data || !statusData.data.tracking_info) {
       return res.status(500).json({ error: 'Keine Tracking-Daten gefunden' });
     }
 
-    // 3. Status interpretieren
+    // 4. Status interpretieren
     const trackingStatus = statusData.data.tracking_info.status || 'unknown';
 
     const statusMapping = {
