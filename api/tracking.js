@@ -23,14 +23,27 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API-Key fehlt' });
   }
 
+  const headers = {
+    'Tracking-Api-Key': apiKey,
+    'Content-Type': 'application/json',
+  };
+
   try {
+    // Schritt 1: Tracking anlegen (ignoriere Fehler, falls es schon existiert)
+    await fetch('https://api.trackingmore.com/v4/trackings/create', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        tracking_number,
+        carrier_code: mappedCarrier,
+      }),
+    });
+
+    // Schritt 2: Status abrufen
     const url = `https://api.trackingmore.com/v4/trackings/${mappedCarrier}/${tracking_number}`;
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Tracking-Api-Key': apiKey,
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     const data = await response.json();
