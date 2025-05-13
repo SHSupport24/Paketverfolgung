@@ -1,32 +1,37 @@
-const axios = require('axios');
+// /api/tracking.js
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   const { carrier_code, tracking_number } = req.query;
 
   if (!carrier_code || !tracking_number) {
-    return res.status(400).json({ error: 'carrier_code und tracking_number erforderlich' });
+    return res.status(400).json({ error: 'Fehlende Parameter' });
+  }
+
+  const apiKey = process.env.TRACKINGMORE_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'API-Key nicht konfiguriert' });
   }
 
   try {
-    const response = await axios.get('https://api.trackingmore.com/v4/trackings/get', {
+    const response = await fetch(`https://api.trackingmore.com/v4/trackings/get?carrier_code=${carrier_code}&tracking_number=${tracking_number}`, {
+      method: 'GET',
       headers: {
-        'Tracking-Api-Key': process.env.TRACKINGMORE_API_KEY,
+        'Tracking-Api-Key': apiKey,
         'Content-Type': 'application/json',
       },
-      params: {
-        carrier_code,
-        tracking_number,
-      },
     });
 
-    const tracking = response.data.data;
+    if (!response.ok) {
+      const text = await response.text();
+      return res.status(500).json({ error: `Tracking API Fehler: ${text}` });
+    }
 
-    res.status(200).json({
-      status: tracking.status,
-      expected_delivery: tracking.expected_delivery,
-      last_update: tracking.lastEventTime,
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Fehler bei TrackingMore', details: err.message });
+    const result = await response.json();
+    const status = result.data?.items?.[0]?.status || 'unbekannt';
+    return res.status(200).json({ status });
+
+  } catch (error) {
+    console.error('Tracking-Fehler:', error);
+    return res.status(500).json({ error: 'Serverfehler bei der Abfrage' });
   }
-};
+}
