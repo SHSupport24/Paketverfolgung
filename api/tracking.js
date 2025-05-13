@@ -1,8 +1,21 @@
+const carrierMap = {
+  'dhl': 'dhl-germany',
+  'dhl-express': 'dhl',
+  'ups': 'ups',
+  'dpd': 'dpd',
+  'gls': 'gls',
+};
+
 export default async function handler(req, res) {
   const { carrier_code, tracking_number } = req.query;
 
   if (!carrier_code || !tracking_number) {
     return res.status(400).json({ error: 'Fehlende Parameter' });
+  }
+
+  const mappedCarrier = carrierMap[carrier_code.toLowerCase()];
+  if (!mappedCarrier) {
+    return res.status(400).json({ error: 'Ungültiger Carrier-Code' });
   }
 
   const apiKey = process.env.TRACKINGMORE_API_KEY;
@@ -11,7 +24,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const url = `https://api.trackingmore.com/v4/trackings/${carrier_code}/${tracking_number}`;
+    const url = `https://api.trackingmore.com/v4/trackings/${mappedCarrier}/${tracking_number}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: {
