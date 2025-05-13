@@ -23,7 +23,8 @@ export default async function handler(req, res) {
 
   try {
     // 1. Tracking-Objekt anlegen mit zusätzlichem Ziel-Land
-    const postResponse = await fetch('https://api.trackingmore.com/v4/trackings/post', {
+    const postResponse = await fetch('https://api.trackingmore.com/v4/trackings', {
+
       method: 'POST',
       headers,
       body: JSON.stringify({
