@@ -35,6 +35,30 @@ export default async function handler(req, res) {
       }),
     });
 
+    // Nach dem POST:
+const postResponse = await fetch('https://api.trackingmore.com/v4/trackings', {
+  method: 'POST',
+  headers,
+  body: JSON.stringify({
+    tracking_number,
+    carrier_code: mappedCarrier,
+    destination_code: 'DE',
+    language: 'de',
+  }),
+});
+
+const postData = await postResponse.json();
+
+if (postResponse.status !== 200 || !postData || postData.error) {
+  return res.status(500).json({ error: 'Fehler beim Senden der Tracking-Nummer', raw: postData });
+}
+
+// ✅ → HIER kurze Wartezeit vor der Abfrage:
+await new Promise(resolve => setTimeout(resolve, 3000));
+
+// Jetzt GET
+
+
     const postData = await postResponse.json();
 
     // Überprüfe, ob die POST-Anfrage erfolgreich war
