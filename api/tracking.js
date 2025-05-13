@@ -22,15 +22,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Tracking-Objekt anlegen
-    await fetch('https://api.trackingmore.com/v4/trackings/post', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        tracking_number,
-        carrier_code: mappedCarrier,
-      }),
-    });
+// 1. Tracking-Objekt anlegen mit zusätzlichem Ziel-Land
+await fetch('https://api.trackingmore.com/v4/trackings/post', {
+  method: 'POST',
+  headers,
+  body: JSON.stringify({
+    tracking_number,
+    carrier_code: mappedCarrier,
+    destination_code: 'DE',
+    language: 'de',
+  }),
+});
+
 
     // 2. Status abfragen
     const statusRes = await fetch(`https://api.trackingmore.com/v4/trackings/${mappedCarrier}/${tracking_number}`, {
