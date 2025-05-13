@@ -22,18 +22,24 @@ export default async function handler(req, res) {
   }
 
   try {
-// 1. Tracking-Objekt anlegen mit zusätzlichem Ziel-Land
-await fetch('https://api.trackingmore.com/v4/trackings/post', {
-  method: 'POST',
-  headers,
-  body: JSON.stringify({
-    tracking_number,
-    carrier_code: mappedCarrier,
-    destination_code: 'DE',
-    language: 'de',
-  }),
-});
+    // 1. Tracking-Objekt anlegen mit zusätzlichem Ziel-Land
+    const postResponse = await fetch('https://api.trackingmore.com/v4/trackings/post', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        tracking_number,
+        carrier_code: mappedCarrier,
+        destination_code: 'DE',
+        language: 'de',
+      }),
+    });
 
+    const postData = await postResponse.json();
+
+    // Überprüfe, ob die POST-Anfrage erfolgreich war
+    if (postResponse.status !== 200 || !postData || postData.error) {
+      return res.status(500).json({ error: 'Fehler beim Senden der Tracking-Nummer', raw: postData });
+    }
 
     // 2. Status abfragen
     const statusRes = await fetch(`https://api.trackingmore.com/v4/trackings/${mappedCarrier}/${tracking_number}`, {
@@ -43,8 +49,13 @@ await fetch('https://api.trackingmore.com/v4/trackings/post', {
 
     const statusData = await statusRes.json();
 
+    // Überprüfe die Antwortstruktur
+    if (!statusData || !statusData.data || !statusData.data.tracking_info) {
+      return res.status(500).json({ error: 'Keine Tracking-Daten gefunden' });
+    }
+
     // 3. Status interpretieren
-    const trackingStatus = statusData?.data?.tracking_info?.status || 'unknown';
+    const trackingStatus = statusData.data.tracking_info.status || 'unknown';
 
     const statusMapping = {
       'delivered': 'Zugestellt',
