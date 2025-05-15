@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   };
 
   const carrierMap = {
-    'dhl': 'dhl',
+    'dhl': 'dhl_germany',
     'dhl-express': 'dhl',
     'ups': 'ups',
     'dpd': 'dpd',
@@ -37,7 +37,6 @@ export default async function handler(req, res) {
 
     const registerData = await registerResponse.json();
 
-    // 4016 = Bereits vorhanden -> kein Fehler
     if (
       registerData.meta.code !== 200 &&
       registerData.meta.code !== 4016
@@ -59,11 +58,7 @@ export default async function handler(req, res) {
 
     const statusData = await statusResponse.json();
 
-    if (
-      !statusData ||
-      !statusData.data ||
-      !statusData.data.tracking_info
-    ) {
+    if (!statusData?.data?.tracking_info) {
       return res.status(404).json({
         error: 'Keine Tracking-Daten gefunden',
         raw: statusData,
