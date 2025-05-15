@@ -1,42 +1,48 @@
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Sendung verfolgen</title>
+  <meta charset="utf-8">
+  <title>Paketverfolgung</title>
   <script src="https://p.trellocdn.com/power-up.min.js"></script>
 </head>
 <body>
-  <h3>Tracking eingeben</h3>
-  <label>Trackingnummer:
-    <input type="text" id="trackingNumber" />
-  </label><br />
-  <label>Dienst (carrier):
-    <select id="carrier">
-      <option value="dhl">DHL</option>
-      <option value="dhl-de">DHL Express</option>
-      <option value="dpd">DPD</option>
-      <option value="gls">GLS</option>
-      <option value="ups">UPS</option>
-    </select>
-  </label><br /><br />
+  <h3>Trackingnummer eingeben</h3>
+  <input type="text" id="trackingNumber" placeholder="z. B. 616561107227" />
+  <select id="carrier">
+    <option value="dhl">DHL</option>
+    <option value="dhl-express">DHL Express</option>
+    <option value="ups">UPS</option>
+    <option value="dpd">DPD</option>
+    <option value="gls">GLS</option>
+  </select>
   <button onclick="track()">Verfolgen</button>
+  <div id="status"></div>
 
   <script>
-    const t = TrelloPowerUp.iframe();
+    var t = TrelloPowerUp.iframe();
 
     async function track() {
-      const carrier = document.getElementById('carrier').value;
       const trackingNumber = document.getElementById('trackingNumber').value;
+      const carrier = document.getElementById('carrier').value;
+      const statusDiv = document.getElementById('status');
 
-      const res = await fetch(`https://paketverfolgung-wo88.vercel.app/api/tracking?carrier_code=${carrier}&tracking_number=${trackingNumber}`);
-      const data = await res.json();
+      statusDiv.innerText = 'Lade...';
 
-      let status = 'Ausstehend';
-      if (data.status === 'delivered') status = 'Zugestellt';
-      else if (data.status === 'transit') status = 'Unterwegs';
+      try {
+        const res = await fetch(`https://paketverfolgung-wo88.vercel.app/api/tracking?carrier_code=${carrier}&tracking_number=${trackingNumber}`);
+        const data = await res.json();
 
-      await t.set('card', 'shared', 'trackingStatus', status);
-      t.closePopup();
+        if (data.status) {
+          statusDiv.innerText = `Status: ${data.status}`;
+          await t.set('card', 'shared', 'trackingStatus', data.status);
+          t.closePopup();
+        } else {
+          statusDiv.innerText = 'Kein Status gefunden.';
+        }
+      } catch (err) {
+        statusDiv.innerText = 'Fehler beim Abrufen.';
+        console.error(err);
+      }
     }
   </script>
 </body>

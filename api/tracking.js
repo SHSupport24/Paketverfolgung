@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   const { carrier_code, tracking_number } = req.query;
 
-  const TRACKINGMORE_API_KEY = 'xlogsga5-8jha-ch20-l4re-nqd4k9fphxxh'; // ← nur Beispiel
+  const TRACKINGMORE_API_KEY = 'xlogsga5-8jha-ch20-l4re-nqd4k9fphxxh';
   const headers = {
     'Content-Type': 'application/json',
     'Tracking-Api-Key': TRACKINGMORE_API_KEY,
@@ -22,8 +22,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Tracking-Objekt anlegen
-    const postResponse = await fetch('https://api.trackingmore.com/v4/trackings', {
+    // 1. Sendung anlegen mit zusätzlichen Infos
+    await fetch('https://api.trackingmore.com/v4/trackings/post', {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -34,29 +34,14 @@ export default async function handler(req, res) {
       }),
     });
 
-    const postData = await postResponse.json();
-
-    if (!postData || postData.meta?.code >= 400) {
-      return res.status(500).json({ error: 'Fehler beim Senden der Tracking-Nummer', raw: postData });
-    }
-
-    // 2. Kurz warten, damit TrackingMore Daten erfassen kann
-    await new Promise(resolve => setTimeout(resolve, 3000));
-
-    // 3. Tracking-Status abrufen
+    // 2. Status abfragen
     const statusRes = await fetch(`https://api.trackingmore.com/v4/trackings/${mappedCarrier}/${tracking_number}`, {
       method: 'GET',
       headers,
     });
 
     const statusData = await statusRes.json();
-
-    if (!statusData || !statusData.data || !statusData.data.tracking_info) {
-      return res.status(500).json({ error: 'Keine Tracking-Daten gefunden', raw: statusData });
-    }
-
-    // 4. Status interpretieren
-    const trackingStatus = statusData.data.tracking_info.status || 'unknown';
+    const trackingStatus = statusData?.data?.tracking_info?.status || 'unknown';
 
     const statusMapping = {
       'delivered': 'Zugestellt',
@@ -73,7 +58,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ status: germanStatus });
 
   } catch (err) {
-    console.error('Fehler in /api/tracking:', err);
     return res.status(500).json({ error: 'Tracking API Fehler', raw: err.message });
   }
 }
